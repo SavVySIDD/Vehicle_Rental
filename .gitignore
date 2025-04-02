@@ -1,0 +1,30 @@
+# Node dependencies
+node_modules/
+
+# Environment variables (sensitive info like DB credentials)
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Compiled files
+dist/
+build/
+*.out
+*.o
+
+# Database files
+*.sqlite
+*.db
+*.sql
+
+# Debug files
+*.pid
+*.seed
+
+# Temporary files
+tmp/
+cache/
