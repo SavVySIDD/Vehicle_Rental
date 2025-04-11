@@ -43,7 +43,9 @@ app.post("/signup", async (req, res) => {
   if (!FirstName || !LastName || !Email || !PhoneNumber || !Address || !DateOfBirth || !Password) {
     return res.status(400).json({ error: "All fields are required" });
   }
-
+  if(Password.length <10){
+    return res.status(400).json({error: "Password should be minimum 10 characters."});
+  }
   try {
     // Check if email or phone number already exists
     const [existingUser] = await db.query(
@@ -254,6 +256,10 @@ app.post("/rent", async (req, res) => {
             "INSERT INTO Rental (CustomerID, VehicleID, RentalDate, TotalCost) VALUES (?, ?, CURDATE(), ?)",
             [CustomerID, VehicleID, TotalCost]
         );
+
+        //SEtting isRented = True;
+        await db.execute("UPDATE Vehicle SET is_rented = TRUE WHERE VehicleID = ?", [VehicleID]);
+
         console.log("Inserted Rental ID:", insertResult.insertId);
         res.status(200).json({ message: "Vehicle rented successfully!", rental_id: insertResult.insertId });
     } catch (error) {
@@ -261,6 +267,30 @@ app.post("/rent", async (req, res) => {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
+
+
+app.post("/return", async (req, res) => {
+  const { RentalID } = req.body;
+
+  try {
+    const [rows] = await db.query("CALL ReturnVehicle(?, @message); SELECT @message AS message;", [
+      RentalID,
+    ]);
+
+    const message = rows[1][0].message;
+
+    if (message === "Vehicle returned successfully!") {
+      res.status(200).json({ message });
+    } else {
+      res.status(409).json({ message });
+    }
+
+  } catch (error) {
+    console.error("Return error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 // Start Server
 app.listen(PORT, () => {

@@ -36,7 +36,7 @@ const VehicleCard = ({ vehicle, refreshVehicles }) => {
     <div className="card bg-base-100 w-full sm:w-96 md:w-80 lg:w-96 shadow-md hover:shadow-lg transition-all">
   <figure>
     <img
-      src="images/icon.jpeg"
+      src={`images/car_images/icon${vehicle.VehicleID}.jpeg`}
       alt={vehicle.Model}
       className="rounded-lg shadow-lg h-[150px] w-full object-cover"
     />
