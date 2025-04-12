@@ -8,7 +8,7 @@ const RentalHistory = () => {
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchRentals = () => {
     if (user && user.CustomerID) {
       axios
         .get(`http://localhost:3306/rentals/${user.CustomerID}`)
@@ -23,7 +23,23 @@ const RentalHistory = () => {
     } else {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchRentals();
   }, [user]);
+
+  const handleReturn = async (rentalID) => {
+    try {
+      const response = await axios.post("http://localhost:3306/return", {
+        RentalID: rentalID,
+      });
+      alert(response.data.message);
+      fetchRentals();
+    } catch (error) {
+      alert("Failed to return vehicle. Try again.");
+    }
+  };
 
   return (
     <div className="p-5">
@@ -37,24 +53,41 @@ const RentalHistory = () => {
         <p>No rentals found</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table w-full border-collapse border font-extrabold  border-gray-300 shadow-lg">
+          <table className="table w-full border-collapse border font-extrabold border-gray-300 shadow-lg">
             <thead>
               <tr className="bg-black-100 text-pink-500">
-                <th className="borde text-pink-500 p-2">#</th>
-                <th className="border text-pink-500 p-2">Model</th>
-                <th className="border text-pink-500 p-2">Rental Date</th>
-                <th className="border text-pink-500 p-2">Total Cost ($)</th>
-                <th className="border text-pink-500 p-2">Branch</th>
+                <th className="p-2">#</th>
+                <th className="p-2">Model</th>
+                <th className="p-2">Rental Date</th>
+                <th className="p-2">Return Date</th>
+                <th className="p-2">Total Cost ($)</th>
+                <th className="p-2">Branch</th>
+                <th className="p-2">Action</th>
               </tr>
             </thead>
             <tbody>
               {rentals.map((rental, index) => (
-                <tr key={rental.RentalID} className="hover:bg-gray-50">
-                  <td className="border p-2 text-center">{index + 1}</td>
-                  <td className="border p-2">{rental.Model}</td>
-                  <td className="border p-2">{new Date(rental.RentalDate).toLocaleDateString()}</td>
-                  <td className="border p-2 text-center">{Number(rental.TotalCost).toFixed(2)}</td>
-                  <td className="border p-2">{rental.BranchName}</td>
+                <tr key={rental.RentalID} className="hover:bg-cyan-400">
+                  <td className="p-2 text-center">{index + 1}</td>
+                  <td className="p-2">{rental.Model}</td>
+                  <td className="p-2">{new Date(rental.RentalDate).toLocaleDateString()}</td>
+                  <td className="p-2">
+                    {rental.ReturnDate
+                      ? new Date(rental.ReturnDate).toLocaleDateString()
+                      : "Not Returned"}
+                  </td>
+                  <td className="p-2 text-center">{Number(rental.TotalCost).toFixed(2)}</td>
+                  <td className="p-2">{rental.BranchName}</td>
+                  <td className="p-2">
+                    {!rental.ReturnDate && (
+                      <button
+                        onClick={() => handleReturn(rental.RentalID)}
+                        className="btn btn-outline btn-error"
+                      >
+                        Return
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -62,10 +95,9 @@ const RentalHistory = () => {
         </div>
       )}
 
-
-      <Link to='/addreview'> 
+      <Link to="/addreview">
         <button className="btn btn-warning flex justify-center mt-5">
-          Write A Review 
+          Write A Review
         </button>
       </Link>
     </div>

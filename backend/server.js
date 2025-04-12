@@ -173,24 +173,25 @@ app.get("/vehicles", async (req, res) => {
 });
 
 // Endpoint to add a review
-app.post("/reviews/add", (req, res) => {
+app.post("/reviews/add", async (req, res) => {
   const { CustomerID, VehicleID, ReviewText, Rating } = req.body;
-  const ReviewDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+  const ReviewDate = new Date().toISOString().split("T")[0];
 
   if (!CustomerID || !VehicleID || !Rating) {
     return res.status(400).json({ message: "CustomerID, VehicleID, and Rating are required." });
   }
 
-  const query = `INSERT INTO reviews (CustomerID, VehicleID, ReviewText, Rating, ReviewDate) VALUES (?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO review (CustomerID, VehicleID, ReviewText, Rating, ReviewDate) VALUES (?, ?, ?, ?, ?)`;
 
-  db.query(query, [CustomerID, VehicleID, ReviewText, Rating, ReviewDate], (err, result) => {
-    if (err) {
-      console.error("Error adding review:", err);
-      return res.status(500).json({ message: "Error adding review" });
-    }
+  try {
+    await db.query(query, [CustomerID, VehicleID, ReviewText, Rating, ReviewDate]);
     res.json({ message: "Review added successfully!" });
-  });
+  } catch (err) {
+    console.error("Error adding review:", err);
+    res.status(500).json({ message: "Error adding review" });
+  }
 });
+
 
 
 // Endpoint to get all reviews
@@ -273,16 +274,20 @@ app.post("/return", async (req, res) => {
   const { RentalID } = req.body;
 
   try {
-    const [rows] = await db.query("CALL ReturnVehicle(?, @message); SELECT @message AS message;", [
-      RentalID,
-    ]);
+    // First: call the stored procedure
+    await db.query("CALL ReturnVehicle(?, @message)", [RentalID]);
 
-    const message = rows[1][0].message;
+    // Second: get the OUT message
+    const [result] = await db.query("SELECT @message AS message");
 
-    if (message === "Vehicle returned successfully!") {
-      res.status(200).json({ message });
+    const message = result[0]?.message;
+
+    if (message === "Vehicle removed from rental successfully.") {
+      return res.status(200).json({ message });
+    } else if (message === "Rental not found.") {
+      return res.status(404).json({ message });
     } else {
-      res.status(409).json({ message });
+      return res.status(500).json({ message: "Unexpected response from procedure." });
     }
 
   } catch (error) {
@@ -290,6 +295,29 @@ app.post("/return", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Get all currently rented vehicles
+app.get("/vehicles/rented", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT * 
+      FROM vehicle 
+      WHERE VehicleID IN (
+        SELECT VehicleID 
+        FROM rental 
+        WHERE ReturnDate IS NULL
+      )
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching rented vehicles:", error);
+    res.status(500).json({ message: "Error fetching rented vehicles" });
+  }
+});
+
+
+
+
 
 
 // Start Server

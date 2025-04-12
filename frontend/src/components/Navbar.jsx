@@ -22,14 +22,15 @@ const Navbar = () => {
       <div className="flex-none">
         <ul className="menu menu-horizontal px-1">
           <li><Link to="/">Home</Link></li>
+          <li><Link to="/profile">Profile</Link></li>
           <li>
             <details>
               <summary>Services</summary>
               <ul className="bg-base-100 rounded-t-none p-2">
-              <li><Link to="/profile">Profile</Link></li>
                 <li><Link to="/rental-history">My Rentals</Link></li>
                 <li><Link to="/dashboard">Dashboard</Link></li>
                 <li><Link to="/review">Reviews</Link></li>
+                <li><Link to="/rented">Rented</Link></li>
               </ul>
             </details>
           </li>

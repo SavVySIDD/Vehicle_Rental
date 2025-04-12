@@ -2,8 +2,9 @@ import { useState, useContext } from "react";
 import axios from "axios";
 import UserContext from "../context/UserContext";
 
-const ReviewForm = ({ vehicleId }) => {
+const ReviewForm = () => {
   const { user } = useContext(UserContext);
+  const [vehicleId, setVehicleId] = useState(""); // ✅ Added this
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState("");
   const [message, setMessage] = useState("");
@@ -11,8 +12,8 @@ const ReviewForm = ({ vehicleId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!reviewText || !rating) {
-      setMessage("Please provide both a review and a rating.");
+    if (!vehicleId || !reviewText || !rating) {
+      setMessage("Please provide Vehicle ID, review, and rating.");
       return;
     }
 
@@ -23,13 +24,14 @@ const ReviewForm = ({ vehicleId }) => {
 
     try {
       const response = await axios.post("http://localhost:3306/reviews/add", {
-        CustomerID: user.CustomerID, // ✅ Correct key assignment
+        CustomerID: user.CustomerID,
         VehicleID: vehicleId,
         ReviewText: reviewText,
         Rating: rating,
       });
 
       setMessage(response.data.message);
+      setVehicleId("");
       setReviewText("");
       setRating("");
     } catch (error) {
@@ -46,6 +48,15 @@ const ReviewForm = ({ vehicleId }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset className="fieldset w-full bg-base-200 border border-base-300 p-4 rounded-box">
           <legend className="fieldset-legend font-bold text-lg">Review Details</legend>
+
+          <label className="fieldset-label font-medium">Vehicle ID</label>
+          <input
+            type="number"
+            className="input w-full p-2 border rounded"
+            placeholder="Enter Vehicle ID"
+            value={vehicleId}
+            onChange={(e) => setVehicleId(e.target.value)}
+          />
 
           <label className="fieldset-label font-medium">Your Review</label>
           <textarea

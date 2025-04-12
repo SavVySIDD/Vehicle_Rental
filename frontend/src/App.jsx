@@ -11,6 +11,7 @@ import UserProfile from "./pages/UserProfile";
 import Hero from "./pages/Hero";
 import ReviewForm from "./pages/ReviewForm";
 import Review from "./pages/Review";
+import RentedVehicles from "./pages/RentedVehicles";
 
 function App() {
   const { user, setUser, admin, setAdmin } = useContext(UserContext);
@@ -36,6 +37,7 @@ function App() {
                 path="/admin-panel" 
                 element={admin ? <AdminPanel /> : <Navigate to="/admin/login" />} 
               />
+              <Route path="/rented" element={<RentedVehicles/>}/>
               <Route path="/profile" element={<UserProfile />} />
             </Routes>
           </div>
